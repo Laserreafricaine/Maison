@@ -99,8 +99,8 @@ h2 { margin: 0; font-size: 28px; line-height: 1.1; }
   font: 700 9px Inter, sans-serif; cursor: pointer;
 }
 .check-task {
-  display: grid; grid-template-columns: 25px minmax(70px, 1fr) auto auto; align-items: center; gap: 6px;
-  min-height: 48px; border-radius: 10px; padding: 5px; background: rgba(255,255,255,.82); color: var(--ink);
+  display: grid; grid-template-columns: 25px minmax(70px, 1fr) auto; align-items: center; gap: 6px;
+  min-height: 48px; border-radius: 10px; padding: 7px; background: rgba(255,255,255,.82); color: var(--ink);
 }
 .task-check {
   width: 25px; height: 25px; border: 2px solid color-mix(in srgb, var(--active-hub) 65%, #777);
@@ -125,12 +125,18 @@ h2 { margin: 0; font-size: 28px; line-height: 1.1; }
   max-width: 31px; color: #696761; font: 700 7px/1 Inter, sans-serif;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.row-actions { display: flex; flex-direction: column; gap: 2px; }
-.row-actions button {
-  width: 22px; height: 20px; border: 0; border-radius: 6px; padding: 0; display: grid; place-items: center;
-  background: #eee9e1; color: #615d57; font-size: 11px; font-weight: 800; cursor: pointer;
+.row-actions {
+  grid-column: 2 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  padding-top: 6px; border-top: 1px solid rgba(91,84,74,.1);
 }
-.row-actions button:last-child { background: #f5e3df; color: var(--danger); }
+.row-actions button {
+  width: auto; min-height: 34px; border: 1px solid transparent; border-radius: 9px; padding: 6px 8px;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  background: color-mix(in srgb, var(--active-hub) 12%, white); color: var(--active-hub);
+  font-size: 10px; font-weight: 800; cursor: pointer;
+}
+.row-actions button span { font-size: 15px; line-height: 1; }
+.row-actions .delete-action { border-color: #e8b8ae; background: #f9e7e3; color: var(--danger); }
 .month-button {
   width: 100%; min-height: 44px; margin-top: 10px; border: 1px solid #cbd1e5; border-radius: 13px;
   background: color-mix(in srgb, var(--active-hub) 8%, white); color: var(--active-hub); font-size: 12px; font-weight: 800; cursor: pointer;
@@ -172,7 +178,7 @@ h2 { margin: 0; font-size: 28px; line-height: 1.1; }
 .quick-list-head span { color: var(--muted); font-size: 10px; }
 .quick-checklist { display: grid; gap: 7px; }
 .quick-task {
-  display: grid; grid-template-columns: 45px 28px minmax(90px, 1fr) auto auto; align-items: center; gap: 8px;
+  display: grid; grid-template-columns: 45px 28px minmax(90px, 1fr) auto; align-items: center; gap: 8px;
   min-height: 62px; border: 1px solid var(--line); border-left: 5px solid var(--active-hub);
   border-radius: 15px; padding: 8px; background: white;
 }
@@ -208,6 +214,11 @@ dialog {
 }
 dialog::backdrop { background: rgba(43,38,31,.48); backdrop-filter: blur(3px); }
 form { padding: 17px; }
+.edit-dialog-actions { display: grid; gap: 9px; }
+.dialog-delete {
+  width: 100%; min-height: 48px; border: 1px solid #dea096; border-radius: 14px; padding: 10px;
+  background: #f9e4df; color: var(--danger); font-size: 13px; font-weight: 800; cursor: pointer;
+}
 .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
 .close { font: 27px/1 Inter, sans-serif; }
 fieldset { margin: 0 0 16px; padding: 0; border: 0; }
@@ -351,10 +362,10 @@ legend, .field > span { display: block; margin-bottom: 7px; font-size: 15px; fon
   .hub small { font-size: 10px; }
   .week-panel { padding: 10px; }
   .slots { grid-template-columns: 1fr; }
-  .check-task { grid-template-columns: 24px minmax(80px, 1fr) auto auto; }
+  .check-task { grid-template-columns: 24px minmax(80px, 1fr) auto; }
   .actor { max-width: 76px; }
   .actor small { max-width: 48px; font-size: 8px; }
   .quick-task { grid-template-columns: 43px 27px minmax(80px, 1fr) auto; }
-  .quick-task .row-actions { grid-column: 3 / -1; flex-direction: row; justify-content: flex-end; }
+  .quick-task .row-actions { grid-column: 3 / -1; }
   .recurrence-period { grid-template-columns: 1fr; }
 }

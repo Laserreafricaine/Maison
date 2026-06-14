@@ -136,6 +136,7 @@
         </section>
 
         <button class="save" id="quickSave" type="submit">Ajouter à la liste</button>
+        <button class="dialog-delete" id="quickDeleteEditing" type="button" hidden>Supprimer la tâche</button>
       </form>
 
       <div class="quick-list-head">
@@ -204,7 +205,10 @@
         </div>
       </fieldset>
 
-      <button class="save" id="saveTask" type="submit">Ajouter au calendrier</button>
+      <div class="edit-dialog-actions">
+        <button class="save" id="saveTask" type="submit">Ajouter au calendrier</button>
+        <button class="dialog-delete" id="deleteTaskInDialog" type="button" hidden>Supprimer la tâche</button>
+      </div>
     </form>
   </dialog>
 

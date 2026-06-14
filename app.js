@@ -65,7 +65,7 @@ let tasks = {
   }
 };
 
-const STORAGE_KEY = "maison-v3-state";
+const STORAGE_KEY = "maison-v4-state";
 let preferences = {
   remindersEnabled: true,
   reminderTime: "19:00",
@@ -298,8 +298,8 @@ function renderQuickTask(entry) {
         <small>${escapeHtml(actor.name)}</small>
       </span>
       <span class="row-actions">
-        <button data-quick-edit="${entry.task.id}" data-source-key="${escapeHtml(entry.sourceKey)}" type="button" aria-label="Modifier">✎</button>
-        <button data-quick-delete="${entry.task.id}" data-source-key="${escapeHtml(entry.sourceKey)}" type="button" aria-label="Supprimer">×</button>
+        <button class="edit-action" data-quick-edit="${entry.task.id}" data-source-key="${escapeHtml(entry.sourceKey)}" type="button"><span aria-hidden="true">✎</span> Modifier</button>
+        <button class="delete-action" data-quick-delete="${entry.task.id}" data-source-key="${escapeHtml(entry.sourceKey)}" type="button"><span aria-hidden="true">×</span> Supprimer</button>
       </span>
     </article>`;
 }
@@ -330,6 +330,7 @@ function editQuickTask(sourceKey, taskId) {
     button.classList.toggle("active", button.dataset.quickPerson === task.person);
   });
   document.getElementById("quickSave").textContent = "Enregistrer les modifications";
+  document.getElementById("quickDeleteEditing").hidden = false;
   updateQuickDateLabel();
   renderQuickFrequencies(task.frequency);
   document.getElementById("quickRecurrenceStart").value = task.recurrenceStart || sourceKey.split("|")[0];
@@ -378,6 +379,7 @@ function resetQuickForm() {
   quickEditingSourceKey = null;
   document.getElementById("quickTaskName").value = "";
   document.getElementById("quickSave").textContent = "Ajouter à la liste";
+  document.getElementById("quickDeleteEditing").hidden = true;
   renderQuickFrequencies();
   document.querySelectorAll("[data-quick-person]").forEach(button => {
     button.classList.toggle("active", button.dataset.quickPerson === "Moi");
@@ -477,8 +479,8 @@ function renderChecklistTask(date, slot, task) {
         <small>${escapeHtml(actor.name)}</small>
       </span>
       <span class="row-actions">
-        <button data-edit-task="${task.id}" data-date="${toKey(date)}" data-slot="${escapeHtml(slot)}" type="button" aria-label="Modifier">✎</button>
-        <button data-delete-task="${task.id}" data-date="${toKey(date)}" data-slot="${escapeHtml(slot)}" type="button" aria-label="Supprimer">×</button>
+        <button class="edit-action" data-edit-task="${task.id}" data-date="${toKey(date)}" data-slot="${escapeHtml(slot)}" type="button"><span aria-hidden="true">✎</span> Modifier</button>
+        <button class="delete-action" data-delete-task="${task.id}" data-date="${toKey(date)}" data-slot="${escapeHtml(slot)}" type="button"><span aria-hidden="true">×</span> Supprimer</button>
       </span>
     </article>`;
 }
@@ -517,6 +519,7 @@ function openTask(date, slot, taskId = null) {
   selectedTime.textContent = `${formatExactDate(selectedDate)} · ${selectedSlot}`;
   taskName.value = existing?.title || "";
   document.getElementById("saveTask").textContent = existing ? "Enregistrer les modifications" : "Ajouter au calendrier";
+  document.getElementById("deleteTaskInDialog").hidden = !existing;
 
   const personGroup = document.querySelector('[data-choice="person"]');
   personGroup.querySelectorAll(".choice").forEach(button => {
@@ -581,12 +584,13 @@ function updateRecurrencePeriod(value) {
 function deleteTask(dateKey, slot, taskId) {
   const key = `${dateKey}|${slot}`;
   const task = (tasks[activeHub][key] || []).find(item => item.id === taskId);
-  if (!task || !confirm(`Supprimer « ${task.title} » ?`)) return;
+  if (!task || !confirm(`Supprimer « ${task.title} » ?`)) return false;
   tasks[activeHub][key] = tasks[activeHub][key].filter(item => item.id !== taskId);
   if (!tasks[activeHub][key].length) delete tasks[activeHub][key];
   saveData();
   showToast("Tâche supprimée");
   render();
+  return true;
 }
 
 function openCalendar(preserveEdit = false, mode = "task") {
@@ -669,6 +673,7 @@ document.querySelectorAll("[data-hub]").forEach(button => {
     quickEditingSourceKey = null;
     document.getElementById("quickTaskName").value = "";
     document.getElementById("quickSave").textContent = "Ajouter à la liste";
+    document.getElementById("quickDeleteEditing").hidden = true;
     render();
   });
 });
@@ -680,6 +685,7 @@ document.querySelectorAll("[data-bottom-hub]").forEach(button => {
     quickEditingSourceKey = null;
     document.getElementById("quickTaskName").value = "";
     document.getElementById("quickSave").textContent = "Ajouter à la liste";
+    document.getElementById("quickDeleteEditing").hidden = true;
     render();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
@@ -713,6 +719,20 @@ document.getElementById("closeDialog").addEventListener("click", () => {
   dialog.close();
   editingTaskId = null;
   editingSourceKey = null;
+});
+document.getElementById("deleteTaskInDialog").addEventListener("click", () => {
+  if (!editingTaskId || !editingSourceKey) return;
+  const [dateKey, ...slotParts] = editingSourceKey.split("|");
+  if (deleteTask(dateKey, slotParts.join("|"), editingTaskId)) {
+    dialog.close();
+    editingTaskId = null;
+    editingSourceKey = null;
+  }
+});
+document.getElementById("quickDeleteEditing").addEventListener("click", () => {
+  if (!quickEditingTaskId || !quickEditingSourceKey) return;
+  const [dateKey, ...slotParts] = quickEditingSourceKey.split("|");
+  if (deleteTask(dateKey, slotParts.join("|"), quickEditingTaskId)) resetQuickForm();
 });
 document.getElementById("closeCalendar").addEventListener("click", () => calendarDialog.close());
 document.getElementById("openCalendar").addEventListener("click", () => openCalendar(false, "task"));
@@ -891,11 +911,11 @@ function openSettings() {
 }
 
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 3, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 4, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `maison-v3-${toKey(new Date())}.json`;
+  link.download = `maison-v4-${toKey(new Date())}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
