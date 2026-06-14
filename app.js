@@ -65,7 +65,7 @@ let tasks = {
   }
 };
 
-const STORAGE_KEY = "maison-v1-state";
+const STORAGE_KEY = "maison-v2-state";
 let preferences = {
   remindersEnabled: true,
   reminderTime: "19:00",
@@ -133,10 +133,16 @@ const frequencyHelp = document.getElementById("frequencyHelp");
 const toast = document.getElementById("toast");
 const monthGrid = document.getElementById("monthGrid");
 
+const currentDay = () => {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  return date;
+};
+
 let activeHub = "household";
-let weekStart = new Date(2026, 5, 15, 12);
-let calendarCursor = new Date(2026, 5, 1, 12);
-let selectedDate = new Date(2026, 5, 15, 12);
+let weekStart = currentDay();
+let calendarCursor = new Date(currentDay().getFullYear(), currentDay().getMonth(), 1, 12);
+let selectedDate = currentDay();
 let selectedSlot = "Matin";
 let editingTaskId = null;
 let editingSourceKey = null;
@@ -183,14 +189,17 @@ function render() {
   const weekEnd = addDays(weekStart, 6);
   const rangeFormat = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
   document.getElementById("weekRange").textContent = `${rangeFormat.format(weekStart)} – ${rangeFormat.format(weekEnd)}`;
+  document.getElementById("backToToday").hidden = sameDay(weekStart, currentDay());
 
   week.innerHTML = Array.from({ length: 7 }, (_, index) => {
     const date = addDays(weekStart, index);
+    const isToday = sameDay(date, currentDay());
     return `
-      <article class="day ${sameDay(date, new Date()) ? "today" : ""}">
+      <article class="day ${isToday ? "today" : ""}">
         <div class="day-head">
           <span class="day-name">${formatDay(date)}</span>
-          <span class="day-date">${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" }).format(date)}</span>
+          <span class="day-date">${date.getDate()}</span>
+          ${isToday ? '<span class="today-badge">Aujourd’hui</span>' : ""}
         </div>
         <div class="slots">
           ${renderSlot(date, hub.slots[0], "morning")}
@@ -262,8 +271,11 @@ function renderQuickPanel() {
 
 function renderQuickTask(entry) {
   const actor = people[entry.task.person] || people["À décider"];
+  const taskDate = fromKey(entry.date);
+  const dayLabel = new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(taskDate).replace(".", "");
   return `
     <article class="quick-task ${entry.task.done ? "done" : ""}">
+      <span class="quick-date-marker"><strong>${taskDate.getDate()}</strong><small>${escapeHtml(dayLabel)}</small></span>
       <button class="task-check" data-quick-toggle="${entry.task.id}" data-source-key="${escapeHtml(entry.sourceKey)}" type="button">${entry.task.done ? "✓" : ""}</button>
       <button class="task-text" data-quick-edit="${entry.task.id}" data-source-key="${escapeHtml(entry.sourceKey)}" type="button">
         ${escapeHtml(entry.task.title)}
@@ -622,7 +634,7 @@ function showCalendarSlotChoice() {
   buttons.querySelectorAll("[data-calendar-slot]").forEach(button => {
     button.addEventListener("click", () => {
       selectedSlot = button.dataset.calendarSlot;
-      weekStart = mondayOf(selectedDate);
+      weekStart = new Date(selectedDate);
       calendarDialog.close();
       render();
       openTask(selectedDate, selectedSlot, editingTaskId);
@@ -667,6 +679,10 @@ document.querySelectorAll(".week-arrow")[0].addEventListener("click", () => {
 });
 document.querySelectorAll(".week-arrow")[1].addEventListener("click", () => {
   weekStart = addDays(weekStart, 7);
+  render();
+});
+document.getElementById("backToToday").addEventListener("click", () => {
+  weekStart = currentDay();
   render();
 });
 bindChoiceGroup(document.querySelector('[data-choice="person"]'));
@@ -781,7 +797,7 @@ form.addEventListener("submit", event => {
   dialog.close();
   editingTaskId = null;
   editingSourceKey = null;
-  weekStart = mondayOf(selectedDate);
+  weekStart = new Date(selectedDate);
   saveData();
   render();
   showToast(existing ? "Tâche modifiée" : "Tâche ajoutée");
@@ -864,11 +880,11 @@ function openSettings() {
 }
 
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 1, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 2, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `maison-v1-${toKey(new Date())}.json`;
+  link.download = `maison-v2-${toKey(new Date())}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

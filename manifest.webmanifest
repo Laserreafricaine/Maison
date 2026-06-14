@@ -1,7 +1,7 @@
 {
   "name": "MAISON",
   "short_name": "MAISON",
-  "description": "Organisation simple du ménage, du jardinage, de l'entretien et des véhicules.",
+  "description": "MAISON V2 : ménage, jardinage, entretien et véhicules.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",

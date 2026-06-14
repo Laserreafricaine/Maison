@@ -52,11 +52,13 @@
       <div class="week-head">
         <button class="week-arrow" type="button" aria-label="Semaine précédente">‹</button>
         <div>
+          <span class="week-kicker">7 jours à partir du</span>
           <h2 id="hubTitle">Ménage</h2>
           <p id="weekRange">15 – 21 juin</p>
         </div>
         <button class="week-arrow" type="button" aria-label="Semaine suivante">›</button>
       </div>
+      <button class="today-button" id="backToToday" type="button" hidden>Revenir à aujourd’hui</button>
 
       <div class="legend">
         <span><i class="morning-dot"></i><b id="firstSlotLabel">Matin</b></span>
@@ -78,50 +80,60 @@
       </div>
 
       <form class="quick-form" id="quickForm">
-        <label class="field quick-what">
-          <span>Quoi ?</span>
-          <input id="quickTaskName" required placeholder="Ex. nettoyer le filtre">
-        </label>
-
-        <fieldset>
-          <legend>Qui ?</legend>
-          <div class="choices" id="quickPeople">
-            <button class="choice active" type="button" data-quick-person="Moi">Moi</button>
-            <button class="choice" type="button" data-quick-person="Foyer">Foyer</button>
-            <button class="choice" type="button" data-quick-person="À décider">À décider</button>
+        <section class="quick-zone quick-identity-zone">
+          <div class="quick-zone-head">
+            <span>1</span>
+            <div><h3>Quoi ? Qui ?</h3><p>Décrivez la tâche et attribuez-la.</p></div>
           </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Quand ?</legend>
-          <div class="choices quick-dates">
-            <button class="choice active" type="button" data-quick-date="today">Aujourd’hui</button>
-            <button class="choice" type="button" data-quick-date="tomorrow">Demain</button>
-            <button class="choice" id="quickCalendar" type="button">Calendrier</button>
+          <label class="field quick-what">
+            <span>Quoi faut-il faire ?</span>
+            <input id="quickTaskName" required placeholder="Ex. nettoyer le filtre">
+          </label>
+          <fieldset>
+            <legend>Qui s’en charge ?</legend>
+            <div class="choices" id="quickPeople">
+              <button class="choice active" type="button" data-quick-person="Moi">Moi</button>
+              <button class="choice" type="button" data-quick-person="Foyer">Foyer</button>
+              <button class="choice" type="button" data-quick-person="À décider">À décider</button>
+            </div>
+          </fieldset>
+          <div class="fill-help quick-help">
+            <p><strong>Suggestions</strong></p>
+            <div class="suggestions" id="quickSuggestions"></div>
           </div>
-          <div class="quick-selected-date" id="quickSelectedDate"></div>
-        </fieldset>
+        </section>
 
-        <fieldset>
-          <legend>Fréquence</legend>
-          <div class="choices" id="quickFrequencies"></div>
-          <p class="frequency-help" id="quickFrequencyHelp">La tâche sera ajoutée une seule fois.</p>
-          <div class="recurrence-period" id="quickRecurrencePeriod" hidden>
-            <label>
-              <span>Date de début</span>
-              <input id="quickRecurrenceStart" type="date">
-            </label>
-            <label>
-              <span>Date de fin</span>
-              <input id="quickRecurrenceEnd" type="date">
-            </label>
+        <section class="quick-zone quick-schedule-zone">
+          <div class="quick-zone-head">
+            <span>2</span>
+            <div><h3>Quand ? Fréquence</h3><p>Choisissez la date et la répétition.</p></div>
           </div>
-        </fieldset>
+          <fieldset>
+            <legend>Quand ?</legend>
+            <div class="choices quick-dates">
+              <button class="choice active" type="button" data-quick-date="today">Aujourd’hui</button>
+              <button class="choice" type="button" data-quick-date="tomorrow">Demain</button>
+              <button class="choice" id="quickCalendar" type="button">Calendrier</button>
+            </div>
+            <div class="quick-selected-date" id="quickSelectedDate"></div>
+          </fieldset>
 
-        <div class="fill-help quick-help">
-          <p><strong>Suggestions</strong></p>
-          <div class="suggestions" id="quickSuggestions"></div>
-        </div>
+          <fieldset>
+            <legend>Fréquence</legend>
+            <div class="choices" id="quickFrequencies"></div>
+            <p class="frequency-help" id="quickFrequencyHelp">La tâche sera ajoutée une seule fois.</p>
+            <div class="recurrence-period" id="quickRecurrencePeriod" hidden>
+              <label>
+                <span>Date de début</span>
+                <input id="quickRecurrenceStart" type="date">
+              </label>
+              <label>
+                <span>Date de fin</span>
+                <input id="quickRecurrenceEnd" type="date">
+              </label>
+            </div>
+          </fieldset>
+        </section>
 
         <button class="save" id="quickSave" type="submit">Ajouter à la liste</button>
       </form>
