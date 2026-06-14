@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f3ea">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MAISON">
+  <title>MAISON</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <p class="date-label">Cette semaine</p>
+        <h1>MAISON</h1>
+      </div>
+      <button class="settings" id="openSettings" type="button" aria-label="Réglages">⚙</button>
+    </header>
+
+    <section class="hubs" aria-label="Espaces">
+      <button class="hub household active" data-hub="household" type="button">
+        <span class="hub-icon">⌂</span>
+        <strong>Ménage</strong>
+        <small>La semaine</small>
+      </button>
+      <button class="hub garden" data-hub="garden" type="button">
+        <span class="hub-icon">♧</span>
+        <strong>Jardinage</strong>
+        <small>La semaine</small>
+      </button>
+      <button class="hub maintenance" data-hub="maintenance" type="button">
+        <span class="hub-icon">⌁</span>
+        <strong>Entretien</strong>
+        <small>La liste</small>
+      </button>
+      <button class="hub vehicles" data-hub="vehicles" type="button">
+        <span class="hub-icon">◇</span>
+        <strong>Véhicules</strong>
+        <small>La liste</small>
+      </button>
+    </section>
+
+    <section class="week-panel" id="weekPanel">
+      <div class="week-head">
+        <button class="week-arrow" type="button" aria-label="Semaine précédente">‹</button>
+        <div>
+          <h2 id="hubTitle">Ménage</h2>
+          <p id="weekRange">15 – 21 juin</p>
+        </div>
+        <button class="week-arrow" type="button" aria-label="Semaine suivante">›</button>
+      </div>
+
+      <div class="legend">
+        <span><i class="morning-dot"></i><b id="firstSlotLabel">Matin</b></span>
+        <span><i class="evening-dot"></i><b id="secondSlotLabel">Soir</b></span>
+      </div>
+
+      <div class="week" id="week"></div>
+      <button class="month-button" id="openCalendar" type="button">▦ Choisir une date dans le calendrier</button>
+      <button class="clear-hub" id="clearWeekHub" type="button">Supprimer toutes les tâches de ce hub</button>
+    </section>
+
+    <section class="quick-panel" id="quickPanel" hidden>
+      <div class="quick-head">
+        <div>
+          <p class="date-label" id="quickEyebrow">Liste pratique</p>
+          <h2 id="quickTitle">Entretien</h2>
+        </div>
+        <span class="quick-count" id="quickCount">0 tâche</span>
+      </div>
+
+      <form class="quick-form" id="quickForm">
+        <label class="field quick-what">
+          <span>Quoi ?</span>
+          <input id="quickTaskName" required placeholder="Ex. nettoyer le filtre">
+        </label>
+
+        <fieldset>
+          <legend>Qui ?</legend>
+          <div class="choices" id="quickPeople">
+            <button class="choice active" type="button" data-quick-person="Moi">Moi</button>
+            <button class="choice" type="button" data-quick-person="Foyer">Foyer</button>
+            <button class="choice" type="button" data-quick-person="À décider">À décider</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Quand ?</legend>
+          <div class="choices quick-dates">
+            <button class="choice active" type="button" data-quick-date="today">Aujourd’hui</button>
+            <button class="choice" type="button" data-quick-date="tomorrow">Demain</button>
+            <button class="choice" id="quickCalendar" type="button">Calendrier</button>
+          </div>
+          <div class="quick-selected-date" id="quickSelectedDate"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Fréquence</legend>
+          <div class="choices" id="quickFrequencies"></div>
+          <p class="frequency-help" id="quickFrequencyHelp">La tâche sera ajoutée une seule fois.</p>
+          <div class="recurrence-period" id="quickRecurrencePeriod" hidden>
+            <label>
+              <span>Date de début</span>
+              <input id="quickRecurrenceStart" type="date">
+            </label>
+            <label>
+              <span>Date de fin</span>
+              <input id="quickRecurrenceEnd" type="date">
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="fill-help quick-help">
+          <p><strong>Suggestions</strong></p>
+          <div class="suggestions" id="quickSuggestions"></div>
+        </div>
+
+        <button class="save" id="quickSave" type="submit">Ajouter à la liste</button>
+      </form>
+
+      <div class="quick-list-head">
+        <h3>Les tâches</h3>
+        <span>À cocher une fois terminées</span>
+      </div>
+      <div class="quick-checklist" id="quickChecklist"></div>
+      <button class="clear-hub" id="clearQuickHub" type="button">Supprimer toutes les tâches de ce hub</button>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="hub-nav active" data-bottom-hub="household" type="button"><span>⌂</span><small>Ménage</small></button>
+    <button class="hub-nav" data-bottom-hub="garden" type="button"><span>♧</span><small>Jardinage</small></button>
+    <button class="hub-nav" data-bottom-hub="maintenance" type="button"><span>⌁</span><small>Entretien</small></button>
+    <button class="hub-nav" data-bottom-hub="vehicles" type="button"><span>◇</span><small>Véhicules</small></button>
+  </nav>
+
+  <dialog id="taskDialog">
+    <form id="taskForm">
+      <div class="dialog-head">
+        <div>
+          <p class="date-label">Ménage</p>
+          <h2 id="dialogTitle">Lundi matin</h2>
+        </div>
+        <button class="close" id="closeDialog" type="button" aria-label="Fermer">×</button>
+      </div>
+
+      <fieldset>
+        <legend>Qui ?</legend>
+        <div class="choices" data-choice="person">
+          <button class="choice active" type="button" data-value="Moi">Moi</button>
+          <button class="choice" type="button" data-value="Foyer">Foyer</button>
+          <button class="choice" type="button" data-value="À décider">À décider</button>
+        </div>
+      </fieldset>
+
+      <label class="field">
+        <span>Quoi ?</span>
+        <input id="taskName" required placeholder="Ex. passer l’aspirateur">
+      </label>
+      <div class="fill-help">
+        <p><strong>Besoin d’une idée ?</strong> Touchez une suggestion pour remplir le champ.</p>
+        <div class="suggestions" id="taskSuggestions"></div>
+      </div>
+
+      <fieldset>
+        <legend>Quand et fréquence</legend>
+        <div class="selected-time" id="selectedTime">Lundi · Matin</div>
+        <button class="change-date" id="changeDate" type="button">Changer la date</button>
+        <div class="choices frequency" data-choice="frequency">
+          <button class="choice active" type="button" data-value="Cette fois">Cette fois</button>
+          <button class="choice" type="button" data-value="Chaque semaine">Chaque semaine</button>
+          <button class="choice" type="button" data-value="Toutes les 2 semaines">Toutes les 2 semaines</button>
+        </div>
+        <p class="frequency-help" id="frequencyHelp">La tâche sera ajoutée uniquement à ce créneau.</p>
+        <div class="recurrence-period" id="recurrencePeriod" hidden>
+          <label>
+            <span>Date de début</span>
+            <input id="recurrenceStart" type="date">
+          </label>
+          <label>
+            <span>Date de fin</span>
+            <input id="recurrenceEnd" type="date">
+          </label>
+        </div>
+      </fieldset>
+
+      <button class="save" id="saveTask" type="submit">Ajouter au calendrier</button>
+    </form>
+  </dialog>
+
+  <dialog id="calendarDialog">
+    <div class="calendar-card">
+      <div class="dialog-head">
+        <div>
+          <p class="date-label">Choisir un jour exact</p>
+          <h2 id="calendarMonth">Juin 2026</h2>
+        </div>
+        <button class="close" id="closeCalendar" type="button" aria-label="Fermer">×</button>
+      </div>
+      <div class="calendar-nav">
+        <button id="previousMonth" type="button" aria-label="Mois précédent">‹</button>
+        <button id="todayMonth" type="button">Aujourd’hui</button>
+        <button id="nextMonth" type="button" aria-label="Mois suivant">›</button>
+      </div>
+      <div class="calendar-weekdays">
+        <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+      </div>
+      <div class="month-grid" id="monthGrid"></div>
+      <div class="calendar-slot-choice" id="calendarSlotChoice" hidden>
+        <strong id="calendarChosenDate"></strong>
+        <p>Choisissez un créneau :</p>
+        <div class="choices" id="calendarSlotButtons"></div>
+      </div>
+      <p class="calendar-help">Touchez un jour, puis choisissez l’un des deux créneaux du hub.</p>
+    </div>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <div class="settings-card">
+      <div class="dialog-head">
+        <div>
+          <p class="date-label">Personnalisation</p>
+          <h2>Réglages</h2>
+        </div>
+        <button class="close" id="closeSettings" type="button" aria-label="Fermer">×</button>
+      </div>
+
+      <section class="settings-section">
+        <h3>Membres du foyer</h3>
+        <p>Les avatars complets pourront être ajoutés dans une prochaine version.</p>
+        <div class="member-list" id="memberList"></div>
+        <div class="member-add">
+          <input id="newMemberName" maxlength="24" placeholder="Prénom">
+          <button id="addMember" type="button">Ajouter</button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Rappels</h3>
+        <p>Ces préférences préparent les informations mises en avant dans l’application.</p>
+        <label class="setting-switch">
+          <span>Activer les rappels</span>
+          <input id="remindersEnabled" type="checkbox">
+        </label>
+        <label class="setting-field">
+          <span>Heure du rappel quotidien</span>
+          <input id="reminderTime" type="time">
+        </label>
+        <div class="setting-checks">
+          <label><input id="remindTomorrow" type="checkbox"> Tâches du lendemain</label>
+          <label><input id="remindOverdue" type="checkbox"> Tâches en retard</label>
+        </div>
+        <div class="setting-field">
+          <span>Prévenir avant une échéance Entretien/Véhicule</span>
+          <div class="choices reminder-delays" id="reminderDelays">
+            <button class="choice" data-reminder-days="7" type="button">7 jours</button>
+            <button class="choice" data-reminder-days="15" type="button">15 jours</button>
+            <button class="choice" data-reminder-days="30" type="button">30 jours</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Suggestions</h3>
+        <p>Ajoutez ou supprimez les raccourcis proposés lors de la création d’une tâche.</p>
+        <div class="suggestion-settings" id="suggestionSettings"></div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Sauvegarde</h3>
+        <p>Exportez toutes les tâches et les membres dans un fichier JSON.</p>
+        <div class="data-actions">
+          <button id="exportData" type="button">Exporter</button>
+          <button id="importData" type="button">Importer</button>
+          <button id="clearCompleted" type="button">Supprimer les tâches terminées</button>
+          <button id="resetCurrentHub" type="button">Réinitialiser le hub actif</button>
+          <button class="reset-data" id="resetData" type="button">Réinitialiser</button>
+        </div>
+      </section>
+    </div>
+  </dialog>
+
+  <input id="importFile" type="file" accept="application/json,.json" hidden>
+  <div class="toast" id="toast">Ajouté au calendrier</div>
+  <script src="app.js"></script>
+</body>
+</html>
