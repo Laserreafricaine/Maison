@@ -65,7 +65,7 @@ let tasks = {
   }
 };
 
-const STORAGE_KEY = "maison-v2-state";
+const STORAGE_KEY = "maison-v3-state";
 let preferences = {
   remindersEnabled: true,
   reminderTime: "19:00",
@@ -165,6 +165,17 @@ function slotKey(date, slot) {
 
 function getSlotTasks(date, slot) {
   return tasks[activeHub][slotKey(date, slot)] || [];
+}
+
+function isDateVisible(date) {
+  const target = parseDateKey(toKey(date));
+  const start = parseDateKey(toKey(weekStart));
+  const end = parseDateKey(toKey(addDays(weekStart, 6)));
+  return target >= start && target <= end;
+}
+
+function parseDateKey(value) {
+  return fromKey(value).getTime();
 }
 
 function render() {
@@ -634,7 +645,7 @@ function showCalendarSlotChoice() {
   buttons.querySelectorAll("[data-calendar-slot]").forEach(button => {
     button.addEventListener("click", () => {
       selectedSlot = button.dataset.calendarSlot;
-      weekStart = new Date(selectedDate);
+      if (!isDateVisible(selectedDate)) weekStart = new Date(selectedDate);
       calendarDialog.close();
       render();
       openTask(selectedDate, selectedSlot, editingTaskId);
@@ -797,7 +808,7 @@ form.addEventListener("submit", event => {
   dialog.close();
   editingTaskId = null;
   editingSourceKey = null;
-  weekStart = new Date(selectedDate);
+  if (!isDateVisible(selectedDate)) weekStart = new Date(selectedDate);
   saveData();
   render();
   showToast(existing ? "Tâche modifiée" : "Tâche ajoutée");
@@ -880,11 +891,11 @@ function openSettings() {
 }
 
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 2, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 3, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `maison-v2-${toKey(new Date())}.json`;
+  link.download = `maison-v3-${toKey(new Date())}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

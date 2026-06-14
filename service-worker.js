@@ -1,4 +1,4 @@
-const CACHE_NAME = "maison-v2";
+const CACHE_NAME = "maison-v3";
 const FILES = [
   "./",
   "./index.html",
