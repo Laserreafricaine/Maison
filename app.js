@@ -65,7 +65,7 @@ let tasks = {
   }
 };
 
-const STORAGE_KEY = "maison-v7-state";
+const STORAGE_KEY = "maison-v8-state";
 let preferences = {
   remindersEnabled: true,
   reminderTime: "19:00",
@@ -140,6 +140,7 @@ const currentDay = () => {
 };
 
 let activeHub = "household";
+let activeView = "hub";
 let weekStart = currentDay();
 let calendarCursor = new Date(currentDay().getFullYear(), currentDay().getMonth(), 1, 12);
 let selectedDate = currentDay();
@@ -150,6 +151,9 @@ let quickDate = new Date();
 let quickEditingTaskId = null;
 let quickEditingSourceKey = null;
 let calendarMode = "task";
+let agendaView = "day";
+let agendaDate = currentDay();
+let agendaHubFilter = "all";
 
 function formatDay(date) {
   return new Intl.DateTimeFormat("fr-FR", { weekday: "long" }).format(date);
@@ -183,6 +187,15 @@ function getHubTaskEntries(hub) {
     const [date, ...slotParts] = sourceKey.split("|");
     return list.map(task => ({ task, date, slot: slotParts.join("|") }));
   });
+}
+
+function getAllTaskEntries() {
+  return Object.keys(HUBS).flatMap(hub =>
+    Object.entries(tasks[hub] || {}).flatMap(([sourceKey, list]) => {
+      const [date, ...slotParts] = sourceKey.split("|");
+      return list.map(task => ({ hub, task, date, slot: slotParts.join("|"), sourceKey }));
+    })
+  );
 }
 
 function relativeTaskDate(dateKey) {
@@ -222,14 +235,20 @@ function renderHubPreviews() {
 
 function render() {
   const hub = HUBS[activeHub];
-  document.documentElement.style.setProperty("--active-hub", hub.color);
-  document.querySelectorAll("[data-hub]").forEach(button => button.classList.toggle("active", button.dataset.hub === activeHub));
-  document.querySelectorAll("[data-bottom-hub]").forEach(button => button.classList.toggle("active", button.dataset.bottomHub === activeHub));
+  document.documentElement.style.setProperty("--active-hub", activeView === "agenda" ? "#69758b" : hub.color);
+  document.querySelectorAll("[data-hub]").forEach(button => button.classList.toggle("active", activeView === "hub" && button.dataset.hub === activeHub));
+  document.querySelectorAll("[data-bottom-hub]").forEach(button => button.classList.toggle("active", activeView === "hub" && button.dataset.bottomHub === activeHub));
+  document.getElementById("openAgenda").classList.toggle("active", activeView === "agenda");
   renderHubPreviews();
   renderPersonChoices();
   const quickMode = activeHub === "maintenance" || activeHub === "vehicles";
-  document.getElementById("weekPanel").hidden = quickMode;
-  document.getElementById("quickPanel").hidden = !quickMode;
+  document.getElementById("weekPanel").hidden = activeView === "agenda" || quickMode;
+  document.getElementById("quickPanel").hidden = activeView === "agenda" || !quickMode;
+  document.getElementById("agendaPanel").hidden = activeView !== "agenda";
+  if (activeView === "agenda") {
+    renderAgenda();
+    return;
+  }
   if (quickMode) {
     renderQuickPanel();
     updateClearHubButtons();
@@ -301,7 +320,7 @@ function renderQuickPanel() {
   const entries = quickEntries();
   document.getElementById("quickTitle").textContent = hub.name;
   document.getElementById("quickEyebrow").textContent = activeHub === "maintenance" ? "Travaux et rendez-vous" : "Entretien et échéances";
-  document.getElementById("quickCount").textContent = `${entries.length} tâche${entries.length > 1 ? "s" : ""}`;
+  document.getElementById("quickCount").textContent = `${entries.length} tâche${entries.length > 1 ? "s" : ""} ↓`;
   document.getElementById("quickTaskName").placeholder = activeHub === "maintenance" ? "Ex. nettoyer le filtre" : "Ex. vérifier les pneus";
   updateQuickDateLabel();
   renderQuickFrequencies();
@@ -321,6 +340,111 @@ function renderQuickPanel() {
     ? entries.map(renderQuickTask).join("")
     : `<div class="quick-empty">Aucune tâche dans cette liste.</div>`;
   bindQuickActions();
+}
+
+function agendaPeriodBounds() {
+  if (agendaView === "day") return { start: new Date(agendaDate), end: new Date(agendaDate) };
+  if (agendaView === "week") {
+    const start = mondayOf(agendaDate);
+    return { start, end: addDays(start, 6) };
+  }
+  const start = new Date(agendaDate.getFullYear(), agendaDate.getMonth(), 1, 12);
+  const end = new Date(agendaDate.getFullYear(), agendaDate.getMonth() + 1, 0, 12);
+  return { start, end };
+}
+
+function agendaEntriesForDate(dateKey) {
+  return getAllTaskEntries().filter(entry =>
+    entry.date === dateKey && (agendaHubFilter === "all" || entry.hub === agendaHubFilter)
+  );
+}
+
+function agendaDots(dateKey) {
+  const hubs = [...new Set(agendaEntriesForDate(dateKey).map(entry => entry.hub))].slice(0, 4);
+  return hubs.length
+    ? `<span class="agenda-task-dots">${hubs.map(hub => `<i style="--dot:${HUBS[hub].color}"></i>`).join("")}</span>`
+    : "";
+}
+
+function renderAgendaCalendar() {
+  const calendar = document.getElementById("agendaCalendar");
+  const label = document.getElementById("agendaPeriodLabel");
+  if (agendaView === "day") {
+    label.textContent = formatExactDate(agendaDate);
+    calendar.innerHTML = `
+      <div class="agenda-day-view">
+        <div><strong>${agendaDate.getDate()}</strong><span>${formatExactDate(agendaDate)}</span>${agendaDots(toKey(agendaDate))}</div>
+      </div>`;
+    return;
+  }
+  if (agendaView === "week") {
+    const start = mondayOf(agendaDate);
+    const end = addDays(start, 6);
+    label.textContent = `${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" }).format(start)} – ${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" }).format(end)}`;
+    calendar.innerHTML = `<div class="agenda-week-view">${Array.from({ length: 7 }, (_, index) => {
+      const date = addDays(start, index);
+      return `<button class="agenda-week-day ${sameDay(date, agendaDate) ? "selected" : ""} ${sameDay(date, currentDay()) ? "today" : ""}" data-agenda-date="${toKey(date)}" type="button">
+        <small>${new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(date).replace(".", "")}</small>
+        <strong>${date.getDate()}</strong>${agendaDots(toKey(date))}
+      </button>`;
+    }).join("")}</div>`;
+  } else {
+    const first = new Date(agendaDate.getFullYear(), agendaDate.getMonth(), 1, 12);
+    const gridStart = mondayOf(first);
+    label.textContent = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(first);
+    calendar.innerHTML = `
+      <div class="agenda-month-weekdays"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+      <div class="agenda-month-grid">${Array.from({ length: 42 }, (_, index) => {
+        const date = addDays(gridStart, index);
+        return `<button class="agenda-month-day ${date.getMonth() !== first.getMonth() ? "outside" : ""} ${sameDay(date, agendaDate) ? "selected" : ""} ${sameDay(date, currentDay()) ? "today" : ""}" data-agenda-date="${toKey(date)}" type="button">
+          ${date.getDate()}${agendaDots(toKey(date))}
+        </button>`;
+      }).join("")}</div>`;
+  }
+  calendar.querySelectorAll("[data-agenda-date]").forEach(button => button.addEventListener("click", () => {
+    agendaDate = fromKey(button.dataset.agendaDate);
+    renderAgenda();
+  }));
+}
+
+function renderAgenda() {
+  document.querySelectorAll("[data-agenda-view]").forEach(button => button.classList.toggle("active", button.dataset.agendaView === agendaView));
+  document.querySelectorAll("[data-agenda-hub]").forEach(button => button.classList.toggle("active", button.dataset.agendaHub === agendaHubFilter));
+  renderAgendaCalendar();
+  const { start, end } = agendaPeriodBounds();
+  const entries = getAllTaskEntries()
+    .filter(entry => {
+      const time = parseDateKey(entry.date);
+      return time >= parseDateKey(toKey(start)) && time <= parseDateKey(toKey(end))
+        && (agendaHubFilter === "all" || entry.hub === agendaHubFilter);
+    })
+    .sort((a, b) => a.date.localeCompare(b.date) || a.slot.localeCompare(b.slot, "fr") || a.task.title.localeCompare(b.task.title, "fr"));
+  document.getElementById("agendaCount").textContent = `${entries.length} tâche${entries.length > 1 ? "s" : ""}`;
+  const groups = entries.reduce((result, entry) => {
+    (result[entry.date] ||= []).push(entry);
+    return result;
+  }, {});
+  document.getElementById("agendaList").innerHTML = entries.length
+    ? Object.entries(groups).map(([date, items]) => `
+      <section class="agenda-date-group">
+        <h4 class="agenda-date-title">${formatExactDate(fromKey(date))}</h4>
+        ${items.map(entry => {
+          const actor = people[entry.task.person] || people["À décider"];
+          return `<article class="agenda-task ${entry.task.done ? "done" : ""}" style="--task-hub:${HUBS[entry.hub].color}">
+            <button class="task-check" data-agenda-toggle="${entry.task.id}" data-agenda-source="${escapeHtml(entry.sourceKey)}" data-agenda-task-hub="${entry.hub}" type="button" aria-label="${entry.task.done ? "Rouvrir" : "Terminer"}">${entry.task.done ? "✓" : ""}</button>
+            <span><strong class="agenda-task-title">${escapeHtml(entry.task.title)}</strong><small class="agenda-task-meta">${escapeHtml(entry.slot)} · ${escapeHtml(actor.name)}</small></span>
+            <span class="agenda-hub-tag">${escapeHtml(HUBS[entry.hub].name)}</span>
+          </article>`;
+        }).join("")}
+      </section>`).join("")
+    : '<div class="agenda-empty">Aucune tâche pour cette période et ce filtre.</div>';
+  document.querySelectorAll("[data-agenda-toggle]").forEach(button => button.addEventListener("click", () => {
+    const list = tasks[button.dataset.agendaTaskHub][button.dataset.agendaSource] || [];
+    const task = list.find(item => item.id === button.dataset.agendaToggle);
+    if (task) task.done = !task.done;
+    saveData();
+    render();
+  }));
 }
 
 function renderQuickTask(entry) {
@@ -710,6 +834,7 @@ function showToast(message) {
 
 document.querySelectorAll("[data-hub]").forEach(button => {
   button.addEventListener("click", () => {
+    activeView = "hub";
     activeHub = button.dataset.hub;
     selectedSlot = HUBS[activeHub].slots[0];
     quickEditingTaskId = null;
@@ -722,6 +847,7 @@ document.querySelectorAll("[data-hub]").forEach(button => {
 });
 document.querySelectorAll("[data-bottom-hub]").forEach(button => {
   button.addEventListener("click", () => {
+    activeView = "hub";
     activeHub = button.dataset.bottomHub;
     selectedSlot = HUBS[activeHub].slots[0];
     quickEditingTaskId = null;
@@ -732,6 +858,39 @@ document.querySelectorAll("[data-bottom-hub]").forEach(button => {
     render();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
+});
+document.getElementById("openAgenda").addEventListener("click", () => {
+  activeView = "agenda";
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+document.getElementById("quickCount").addEventListener("click", () => {
+  document.getElementById("quickListAnchor").scrollIntoView({ behavior: "smooth", block: "start" });
+  document.getElementById("quickListAnchor").focus({ preventScroll: true });
+});
+document.querySelectorAll("[data-agenda-view]").forEach(button => button.addEventListener("click", () => {
+  agendaView = button.dataset.agendaView;
+  renderAgenda();
+}));
+document.querySelectorAll("[data-agenda-hub]").forEach(button => button.addEventListener("click", () => {
+  agendaHubFilter = button.dataset.agendaHub;
+  renderAgenda();
+}));
+document.getElementById("agendaToday").addEventListener("click", () => {
+  agendaDate = currentDay();
+  renderAgenda();
+});
+document.getElementById("agendaPrevious").addEventListener("click", () => {
+  if (agendaView === "day") agendaDate = addDays(agendaDate, -1);
+  else if (agendaView === "week") agendaDate = addDays(agendaDate, -7);
+  else agendaDate = new Date(agendaDate.getFullYear(), agendaDate.getMonth() - 1, 1, 12);
+  renderAgenda();
+});
+document.getElementById("agendaNext").addEventListener("click", () => {
+  if (agendaView === "day") agendaDate = addDays(agendaDate, 1);
+  else if (agendaView === "week") agendaDate = addDays(agendaDate, 7);
+  else agendaDate = new Date(agendaDate.getFullYear(), agendaDate.getMonth() + 1, 1, 12);
+  renderAgenda();
 });
 document.querySelectorAll(".week-arrow")[0].addEventListener("click", () => {
   weekStart = addDays(weekStart, -7);
@@ -954,11 +1113,11 @@ function openSettings() {
 }
 
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 7, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 8, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `maison-v7-${toKey(new Date())}.json`;
+  link.download = `maison-v8-${toKey(new Date())}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

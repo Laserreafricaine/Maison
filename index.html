@@ -88,7 +88,7 @@
           <p class="date-label" id="quickEyebrow">Liste pratique</p>
           <h2 id="quickTitle">Entretien</h2>
         </div>
-        <span class="quick-count" id="quickCount">0 tâche</span>
+        <button class="quick-count" id="quickCount" type="button" aria-label="Voir la liste des tâches">0 tâche ↓</button>
       </div>
 
       <form class="quick-form" id="quickForm">
@@ -151,12 +151,50 @@
         <button class="dialog-delete" id="quickDeleteEditing" type="button" hidden>Supprimer la tâche</button>
       </form>
 
-      <div class="quick-list-head">
+      <div class="quick-list-head" id="quickListAnchor" tabindex="-1">
         <h3>Les tâches</h3>
         <span>À cocher une fois terminées</span>
       </div>
       <div class="quick-checklist" id="quickChecklist"></div>
       <button class="clear-hub" id="clearQuickHub" type="button">Supprimer toutes les tâches de ce hub</button>
+    </section>
+
+    <section class="agenda-panel" id="agendaPanel" hidden>
+      <div class="agenda-head">
+        <div>
+          <p class="date-label">Toutes les tâches</p>
+          <h2>Agenda</h2>
+        </div>
+        <button class="agenda-today" id="agendaToday" type="button">Aujourd’hui</button>
+      </div>
+
+      <div class="agenda-views" aria-label="Période de l’agenda">
+        <button class="active" data-agenda-view="day" type="button">Jour</button>
+        <button data-agenda-view="week" type="button">Semaine</button>
+        <button data-agenda-view="month" type="button">Mois</button>
+      </div>
+
+      <div class="agenda-nav">
+        <button id="agendaPrevious" type="button" aria-label="Période précédente">‹</button>
+        <strong id="agendaPeriodLabel"></strong>
+        <button id="agendaNext" type="button" aria-label="Période suivante">›</button>
+      </div>
+
+      <div class="agenda-calendar" id="agendaCalendar"></div>
+
+      <div class="agenda-filters" aria-label="Filtrer les hubs">
+        <button class="active" data-agenda-hub="all" type="button">Tous</button>
+        <button data-agenda-hub="household" type="button">Ménage</button>
+        <button data-agenda-hub="garden" type="button">Jardinage</button>
+        <button data-agenda-hub="maintenance" type="button">Entretien</button>
+        <button data-agenda-hub="vehicles" type="button">Véhicules</button>
+      </div>
+
+      <div class="agenda-list-head">
+        <h3>Les tâches</h3>
+        <span id="agendaCount">0 tâche</span>
+      </div>
+      <div class="agenda-list" id="agendaList"></div>
     </section>
   </main>
 
@@ -165,6 +203,7 @@
     <button class="hub-nav" data-bottom-hub="garden" type="button"><span>♧</span><small>Jardinage</small></button>
     <button class="hub-nav" data-bottom-hub="maintenance" type="button"><span>⌁</span><small>Entretien</small></button>
     <button class="hub-nav" data-bottom-hub="vehicles" type="button"><span>◇</span><small>Véhicules</small></button>
+    <button class="agenda-nav-button" id="openAgenda" type="button"><span>▦</span><small>Agenda</small></button>
   </nav>
 
   <dialog id="taskDialog">
