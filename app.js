@@ -65,7 +65,7 @@ let tasks = {
   }
 };
 
-const STORAGE_KEY = "maison-v5-state";
+const STORAGE_KEY = "maison-v7-state";
 let preferences = {
   remindersEnabled: true,
   reminderTime: "19:00",
@@ -178,11 +178,54 @@ function parseDateKey(value) {
   return fromKey(value).getTime();
 }
 
+function getHubTaskEntries(hub) {
+  return Object.entries(tasks[hub] || {}).flatMap(([sourceKey, list]) => {
+    const [date, ...slotParts] = sourceKey.split("|");
+    return list.map(task => ({ task, date, slot: slotParts.join("|") }));
+  });
+}
+
+function relativeTaskDate(dateKey) {
+  const today = currentDay();
+  const date = fromKey(dateKey);
+  const days = Math.round((parseDateKey(dateKey) - parseDateKey(toKey(today))) / 86400000);
+  if (days < 0) return `En retard de ${Math.abs(days)} j`;
+  if (days === 0) return "Aujourd’hui";
+  if (days === 1) return "Demain";
+  return new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short" })
+    .format(date)
+    .replace(".", "");
+}
+
+function renderHubPreviews() {
+  Object.keys(HUBS).forEach(hub => {
+    const container = document.querySelector(`[data-hub-next="${hub}"]`);
+    if (!container) return;
+    const remaining = getHubTaskEntries(hub)
+      .filter(entry => !entry.task.done)
+      .sort((a, b) => parseDateKey(a.date) - parseDateKey(b.date));
+    const next = remaining[0];
+    if (!next) {
+      container.className = "hub-next empty";
+      container.innerHTML = '<span class="hub-next-title">Aucune tâche prévue</span><span class="hub-next-count">Tout est à jour</span>';
+      return;
+    }
+    const actor = people[next.task.person] || people["À décider"];
+    const overdue = parseDateKey(next.date) < parseDateKey(toKey(currentDay()));
+    container.className = `hub-next${overdue ? " overdue" : ""}`;
+    container.innerHTML = `
+      <span class="hub-next-title">${escapeHtml(next.task.title)}</span>
+      <span class="hub-next-meta">${escapeHtml(relativeTaskDate(next.date))} · ${escapeHtml(next.slot)} · ${escapeHtml(actor.name)}</span>
+      <span class="hub-next-count">${remaining.length} tâche${remaining.length > 1 ? "s" : ""} à venir</span>`;
+  });
+}
+
 function render() {
   const hub = HUBS[activeHub];
   document.documentElement.style.setProperty("--active-hub", hub.color);
   document.querySelectorAll("[data-hub]").forEach(button => button.classList.toggle("active", button.dataset.hub === activeHub));
   document.querySelectorAll("[data-bottom-hub]").forEach(button => button.classList.toggle("active", button.dataset.bottomHub === activeHub));
+  renderHubPreviews();
   renderPersonChoices();
   const quickMode = activeHub === "maintenance" || activeHub === "vehicles";
   document.getElementById("weekPanel").hidden = quickMode;
@@ -911,11 +954,11 @@ function openSettings() {
 }
 
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 5, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 7, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `maison-v5-${toKey(new Date())}.json`;
+  link.download = `maison-v7-${toKey(new Date())}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
