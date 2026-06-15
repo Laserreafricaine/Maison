@@ -214,6 +214,43 @@ dialog {
 }
 dialog::backdrop { background: rgba(43,38,31,.48); backdrop-filter: blur(3px); }
 form { padding: 17px; }
+.task-dialog-zone {
+  margin-bottom: 18px; border: 2px solid transparent; border-radius: 18px; padding: 15px;
+  box-shadow: 0 7px 18px rgba(67,56,42,.08);
+}
+.task-dialog-zone.person-zone {
+  border-color: #8493c8;
+  background: #dce1f5;
+}
+.task-dialog-zone.schedule-zone {
+  border-color: #bd8139;
+  background: #f3d9aa;
+}
+.task-dialog-zone legend {
+  width: auto; margin: 0 0 10px; border-radius: 10px; padding: 4px 9px;
+  color: white; font-size: 20px; line-height: 1.1;
+}
+.task-dialog-zone.person-zone legend { background: #6678b8; }
+.task-dialog-zone.schedule-zone legend { background: #a96d28; }
+.task-dialog-zone .choice {
+  min-height: 47px; padding: 9px 15px; background: rgba(255,255,255,.88); font-size: 14px;
+}
+.task-dialog-zone.person-zone .choice.active {
+  border-color: #5367aa; background: #6377b7; color: white;
+}
+.task-dialog-zone.schedule-zone .choice.active {
+  border-color: #995f20; background: #aa6d28; color: white;
+}
+.task-dialog-zone.schedule-zone .selected-time {
+  min-height: 48px; display: flex; align-items: center; background: rgba(255,255,255,.82);
+  color: #704817; font-size: 15px; font-weight: 800;
+}
+.task-dialog-zone.schedule-zone .change-date {
+  min-height: 44px; border-color: #b7772f; color: #87531b; font-size: 13px;
+}
+.task-dialog-zone.schedule-zone .frequency-help {
+  color: #684d2d; font-size: 12px; line-height: 1.5;
+}
 .edit-dialog-actions { display: grid; gap: 9px; }
 .dialog-delete {
   width: 100%; min-height: 48px; border: 1px solid #dea096; border-radius: 14px; padding: 10px;
@@ -230,17 +267,17 @@ legend, .field > span { display: block; margin-bottom: 7px; font-size: 15px; fon
 }
 .choice.active { border-color: var(--active-hub); background: color-mix(in srgb, var(--active-hub) 15%, white); color: var(--active-hub); }
 .field { display: block; margin-bottom: 16px; }
-.field input { width: 100%; min-height: 49px; border: 1px solid var(--line); border-radius: 13px; padding: 11px 12px; background: white; }
+.field input { width: 100%; min-height: 53px; border: 1px solid var(--line); border-radius: 13px; padding: 12px 13px; background: white; font-size: 16px; }
 .fill-help {
   margin: -7px 0 17px; border: 1px dashed color-mix(in srgb, var(--active-hub) 35%, var(--line)); border-radius: 14px; padding: 10px;
   background: color-mix(in srgb, var(--active-hub) 6%, white);
 }
-.fill-help p, .frequency-help { margin: 0 0 8px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.fill-help p, .frequency-help { margin: 0 0 8px; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .suggestions { display: flex; flex-wrap: wrap; gap: 6px; }
 .suggestion {
   min-height: 35px; border: 0; border-radius: 10px; padding: 6px 10px;
   background: white; color: var(--active-hub); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--active-hub) 30%, var(--line));
-  font-size: 10px; font-weight: 800; cursor: pointer;
+  font-size: 12px; font-weight: 800; cursor: pointer;
 }
 .suggestion:active { background: #e8ebf7; }
 .selected-time { border-radius: 12px; padding: 11px 12px; margin-bottom: 8px; background: #f5f0e8; font-size: 12px; font-weight: 700; }

@@ -65,7 +65,7 @@ let tasks = {
   }
 };
 
-const STORAGE_KEY = "maison-v4-state";
+const STORAGE_KEY = "maison-v5-state";
 let preferences = {
   remindersEnabled: true,
   reminderTime: "19:00",
@@ -911,11 +911,11 @@ function openSettings() {
 }
 
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 4, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ app: "MAISON", version: 5, people, tasks, sequence, preferences, customSuggestions }, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `maison-v4-${toKey(new Date())}.json`;
+  link.download = `maison-v5-${toKey(new Date())}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
